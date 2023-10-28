@@ -5,6 +5,8 @@ const innerJoystickRadius = 50;
 
 isJoystickHeldMap = {};
 anchorMap = {};
+joystickToTouchMap = {};
+doesUpperJoystickHaveFirstTouch = false;
 
 initializeControls(mainDiv);
 
@@ -12,6 +14,7 @@ function initializeControls(parent) {
 
     // Create the top joystick
     const upperJoystick = createJoystick("upperJoystick", 25, 50, parent);
+    const lowerJoystick = createJoystick("lowerJoystick", 75, 50, parent);
     // TODO create another joystick
 
 }
@@ -54,6 +57,7 @@ function createJoystick(id, x, y, parent) {
     }
 
     function standardMousedown() {
+        joystickToTouchMap[id] = [...Object.keys(isJoystickHeldMap)].filter(key => isJoystickHeldMap[key]).length;
         isJoystickHeldMap[id] = true;
         setAnchor();
     }
@@ -64,18 +68,21 @@ function createJoystick(id, x, y, parent) {
     innerJoystick.addEventListener("touchstart", (event) => {
         event.preventDefault();
         standardMousedown();
-        updateJoystickPosition(event.touches[0]);
+        updateJoystickPosition(event.touches[joystickToTouchMap[id]]);
     });
 
     function standardMouseup() {
         isJoystickHeldMap[id] = false;
+        delete joystickToTouchMap[id];
         innerJoystick.style.transform = `translate(${-innerJoystickRadius}px, ${-innerJoystickRadius}px)`;
     }
 
     document.body.addEventListener("mouseup", standardMouseup);
     document.body.addEventListener("touchend", standardMouseup);
     document.body.addEventListener("mousemove", updateJoystickPosition);
-    document.body.addEventListener("touchmove", updateJoystickPosition);
+    document.body.addEventListener("touchmove", (event) => {
+        updateJoystickPosition(event.touches[joystickToTouchMap[id]]);
+    });
     
     const outerJoystickOutsideRadiusSquared = outerJoystickOutsideRadius * outerJoystickOutsideRadius;
     function updateJoystickPosition(touchEvent) {
