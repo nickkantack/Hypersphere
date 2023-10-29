@@ -185,6 +185,7 @@ class Environment {
                 //polygon.svg.querySelector("path").setAttribute("opacity", (10 / projection.rotatedPoint[0] > 1 ? 1 : 10 / projection.rotatedPoint[0]));
                 polygon.svg.querySelector("path").setAttribute("d", `${pathString}Z`);
                 // Do one swap with a neighbor
+                /*
                 const previousSibling = polygon.svg.previousSibling;
                 if (previousSibling.tagName === "svg") {
                     if (previousSibling.getAttribute("lastACoordinate") && polygon.svg.getAttribute("lastACoordinate")) {
@@ -193,6 +194,7 @@ class Environment {
                         }
                     }
                 }
+                */
             } else {
                 polygon.svg.style.display = "none";
             }
