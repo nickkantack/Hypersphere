@@ -80,7 +80,7 @@ class Environment {
         this.#parent.appendChild(svg);
     }
 
-    #threePointToTopAndLeftPercents(point, azimuthAngle, elevationAngle, observerCoordinates) {
+    #threePointToTopAndLeftPercents(point, azimuthAngle, elevationAngle, observerCoordinates, doPolyPin) {
         let translatedPoint = [point[0] - observerCoordinates[0], point[1] - observerCoordinates[1], point[2] - observerCoordinates[2]];
         let intermedRotatedPoint = [translatedPoint[0] * Math.cos(azimuthAngle) - translatedPoint[1] * Math.sin(azimuthAngle),
                                     translatedPoint[1] * Math.cos(azimuthAngle) + translatedPoint[0] * Math.sin(azimuthAngle), 
@@ -90,14 +90,15 @@ class Environment {
                             intermedRotatedPoint[2] * Math.cos(elevationAngle) + intermedRotatedPoint[0] * Math.sin(elevationAngle)];
         // Now rotatedPoint can be thought of as in the form [a, b, c], where a is depth, b is long dim of the screen, and c is the
         // short dim of the screen
+        let isVisible = rotatedPoint[0] > 0;
+        if (doPolyPin && rotatedPoint[0] < 0) rotatedPoint[0] = 0.1;
         let screenX = rotatedPoint[0] === 0 ? rotatedPoint[1] : rotatedPoint[1] * this.#referenceDistance / rotatedPoint[0];
         screenX /= this.#bMax;
         let screenY = rotatedPoint[0] === 0 ? rotatedPoint[0] : rotatedPoint[2] * this.#referenceDistance / rotatedPoint[0];
         screenY /= this.#cMax;
         const sizeScaler = rotatedPoint[0] === 0 ? 0 : 1 / rotatedPoint[0] * this.#referenceDistance;
-        // console.log(`screenX: ${screenX}, screenY: ${screenY}`);
 
-        const isVisible = rotatedPoint[0] > 0 && Math.abs(screenX) < 110 && Math.abs(screenY) < 110;
+        isVisible &= Math.abs(screenX) < 110 && Math.abs(screenY) < 110;
 
         return {
             isVisible: isVisible,
@@ -118,13 +119,21 @@ class Environment {
                 console.warn(`Skipping drawing polygon with only ${polygon.arrayOfCoordinates.length} vertices.`);
                 continue;
             }
-            let projection = this.#threePointToTopAndLeftPercents(polygon.arrayOfCoordinates[0], azimuthAngle, elevationAngle, observerCoordinates);
+
+            let projection = this.#threePointToTopAndLeftPercents(polygon.arrayOfCoordinates[0], azimuthAngle, elevationAngle, observerCoordinates, true);
+            let isAnyPointVisible = projection.isVisible;
             let pathString = `M${projection.leftPercent} ${projection.topPercent}`;
             for (let i = 1; i < polygon.arrayOfCoordinates.length; i++) {
-                projection = this.#threePointToTopAndLeftPercents(polygon.arrayOfCoordinates[i], azimuthAngle, elevationAngle, observerCoordinates);
+                projection = this.#threePointToTopAndLeftPercents(polygon.arrayOfCoordinates[i], azimuthAngle, elevationAngle, observerCoordinates, true);
+                isAnyPointVisible |= projection.isVisible;
                 pathString += `L${projection.leftPercent} ${projection.topPercent}`;
             }
-            polygon.svg.querySelector("path").setAttribute("d", `${pathString}Z`);
+            if (isAnyPointVisible) {
+                polygon.svg.style.display = "block";
+                polygon.svg.querySelector("path").setAttribute("d", `${pathString}Z`);
+            } else {
+                polygon.svg.style.display = "none";
+            }
         }
 
         for (let point of this.#points) {

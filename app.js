@@ -8,6 +8,12 @@ function terrainGenerator(x, y) {
 for (let i = -15; i < 15; i++) {
     for (let j = -15; j < 15; j++) {
         environment.addPoint([2 * i, 2 * j, -1]);
+        environment.addPolygon([
+            [2 * i, 2 * j, -1],
+            [2 * (i + 1), 2 * j, -1],
+            [2 * (i + 1), 2 * (j + 1), -1],
+            [2 * i, 2 * (j + 1), -1],
+        ], "#FAA");
     }
 }
 
