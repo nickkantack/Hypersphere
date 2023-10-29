@@ -1,6 +1,7 @@
 class Environment {
 
     #points;
+    #polygons;
     #referenceDistance;
     #bMax;
     #cMax;
@@ -13,6 +14,7 @@ class Environment {
     constructor(referenceDistance, bFieldOfViewAngle, cFieldOfViewAngle, parent) {
         this.#referenceDistance = referenceDistance;
         this.#points = [];
+        this.#polygons = [];
         // Compute bMax and cMax
         this.#bMax = Math.tan(bFieldOfViewAngle / 2) * referenceDistance / 200;
         this.#cMax = Math.tan(cFieldOfViewAngle / 2) * referenceDistance / 200;
@@ -34,45 +36,81 @@ class Environment {
         this.#parent.appendChild(svg);
     }
 
+    addPolygon(arrayOfCoordinates) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("viewBox", "0 0 100 100");
+        svg.setAttribute("preserveAspectRatio", "none");
+        svg.style.display = "block";
+        svg.style.position = "absolute";
+        svg.style.left = "0";
+        svg.style.top = "0";
+        svg.style.width = `100%`;
+        svg.style.height = `100%`;
+        svg.innerHTML = `<path stroke="none" fill=#777 d=""/>`;
+        this.#polygons.push({svg: svg, arrayOfCoordinates: arrayOfCoordinates});
+        this.#parent.appendChild(svg);
+    }
+
+    #threePointToTopAndLeftPercents(point, azimuthAngle, elevationAngle, observerCoordinates) {
+        let translatedPoint = [point[0] - observerCoordinates[0], point[1] - observerCoordinates[1], point[2] - observerCoordinates[2]];
+        let intermedRotatedPoint = [translatedPoint[0] * Math.cos(azimuthAngle) - translatedPoint[1] * Math.sin(azimuthAngle),
+                                    translatedPoint[1] * Math.cos(azimuthAngle) + translatedPoint[0] * Math.sin(azimuthAngle), 
+                                    translatedPoint[2]];
+        let rotatedPoint = [intermedRotatedPoint[0] * Math.cos(elevationAngle) - intermedRotatedPoint[2] * Math.sin(elevationAngle),
+                            intermedRotatedPoint[1],
+                            intermedRotatedPoint[2] * Math.cos(elevationAngle) + intermedRotatedPoint[0] * Math.sin(elevationAngle)];
+        // Now rotatedPoint can be thought of as in the form [a, b, c], where a is depth, b is long dim of the screen, and c is the
+        // short dim of the screen
+        let screenX = rotatedPoint[0] === 0 ? rotatedPoint[1] : rotatedPoint[1] * this.#referenceDistance / rotatedPoint[0];
+        screenX /= this.#bMax;
+        let screenY = rotatedPoint[0] === 0 ? rotatedPoint[0] : rotatedPoint[2] * this.#referenceDistance / rotatedPoint[0];
+        screenY /= this.#cMax;
+        const sizeScaler = rotatedPoint[0] === 0 ? 0 : 1 / rotatedPoint[0] * this.#referenceDistance;
+        // console.log(`screenX: ${screenX}, screenY: ${screenY}`);
+
+        const isVisible = rotatedPoint[0] > 0 && Math.abs(screenX) < 110 && Math.abs(screenY) < 110;
+
+        return {
+            isVisible: isVisible,
+            leftPercent: 50 + screenY,
+            topPercent: 50 + screenX,
+            sizeScaler: sizeScaler
+        }
+
+    }
+
     draw(azimuthAngle, elevationAngle, observerCoordinates) {
         const drawStartTime = Date.now();
         if (drawStartTime - this.#lastDrawTime < Environment.minMillisBetweenDraws) return;
-        // First, translate everything so that the origin is referenceDistance
-        for (let point of this.#points) {
-            let svg = point.svg;
-            let p = point.coordinates;
-            let translatedPoint = [p[0] - observerCoordinates[0], p[1] - observerCoordinates[1], p[2] - observerCoordinates[2]];
-            // console.log(`translatedPoint: ${translatedPoint}`);
-            let intermedRotatedPoint = [translatedPoint[0] * Math.cos(azimuthAngle) - translatedPoint[1] * Math.sin(azimuthAngle),
-                                        translatedPoint[1] * Math.cos(azimuthAngle) + translatedPoint[0] * Math.sin(azimuthAngle), 
-                                        translatedPoint[2]];
-            // console.log(`intermedRotatedPoint: ${intermedRotatedPoint}`);
-            let rotatedPoint = [intermedRotatedPoint[0] * Math.cos(elevationAngle) - intermedRotatedPoint[2] * Math.sin(elevationAngle),
-                                intermedRotatedPoint[1],
-                                intermedRotatedPoint[2] * Math.cos(elevationAngle) + intermedRotatedPoint[0] * Math.sin(elevationAngle)];
-            // console.log(`rotatedPoint: ${rotatedPoint}`);
-            if (rotatedPoint[0] < 0) {
-                svg.style.display = "none";
+
+        for (let polygon of this.#polygons) {
+            // Generate the svg d string
+            if (polygon.arrayOfCoordinates.length < 3) {
+                console.warn(`Skipping drawing polygon with only ${polygon.arrayOfCoordinates.length} vertices.`);
                 continue;
             }
-            // Now rotatedPoint can be thought of as in the form [a, b, c], where a is depth, b is long dim of the screen, and c is the
-            // short dim of the screen
-            let screenX = rotatedPoint[0] === 0 ? rotatedPoint[1] : rotatedPoint[1] * this.#referenceDistance / rotatedPoint[0];
-            screenX /= this.#bMax;
-            let screenY = rotatedPoint[0] === 0 ? rotatedPoint[0] : rotatedPoint[2] * this.#referenceDistance / rotatedPoint[0];
-            screenY /= this.#cMax;
-            const size = rotatedPoint[0] === 0 ? 0 : 10 / rotatedPoint[0] * this.#referenceDistance;
-            // console.log(`screenX: ${screenX}, screenY: ${screenY}`);
-
-            const isVisible = rotatedPoint[0] > 0 && Math.abs(screenX) < 110 && Math.abs(screenY) < 110;
-
-            svg.style.display = isVisible ? "block" : "none";
-            if (!isVisible) continue;
-            svg.style.width = `${size}px`;
-            svg.style.height = `${size}px`;
-            svg.style.top = `${50 + screenX}%`;
-            svg.style.left = `${50 + screenY}%`;
+            let projection = this.#threePointToTopAndLeftPercents(polygon.arrayOfCoordinates[0], azimuthAngle, elevationAngle, observerCoordinates);
+            let pathString = `M${projection.leftPercent} ${projection.topPercent}`;
+            for (let i = 1; i < polygon.arrayOfCoordinates.length; i++) {
+                projection = this.#threePointToTopAndLeftPercents(polygon.arrayOfCoordinates[i], azimuthAngle, elevationAngle, observerCoordinates);
+                pathString += `L${projection.leftPercent} ${projection.topPercent}`;
+            }
+            polygon.svg.querySelector("path").setAttribute("d", `${pathString}Z`);
         }
+
+        for (let point of this.#points) {
+            let svg = point.svg;
+
+            const projection = this.#threePointToTopAndLeftPercents(point.coordinates, azimuthAngle, elevationAngle, observerCoordinates);
+
+            svg.style.display = projection.isVisible ? "block" : "none";
+            if (!projection.isVisible) continue;
+            svg.style.width = `${10 * projection.sizeScaler}px`;
+            svg.style.height = `${10 * projection.sizeScaler}px`;
+            svg.style.top = `${projection.topPercent}%`;
+            svg.style.left = `${projection.leftPercent}%`;
+        }
+
         this.#lastDrawTime = Date.now();
         this.#lastDrawDuration = this.#lastDrawTime - drawStartTime;
     }
