@@ -9,6 +9,9 @@ class Environment {
     #lastDrawTime;
     #lastDrawDuration;
     #lightVector;
+    #bFieldOfViewAngle;
+    #cFieldOfViewAngle;
+    #backgroundGradientSvg;
 
     static minMillisBetweenDraws = 10;
 
@@ -17,6 +20,8 @@ class Environment {
         this.#points = [];
         this.#polygons = [];
         this.#lightVector = lightVector;
+        this.#bFieldOfViewAngle = bFieldOfViewAngle;
+        this.#cFieldOfViewAngle = cFieldOfViewAngle;
         const lightVectorLength = VectorCalc.mag(lightVector);
         if (lightVectorLength < VectorCalc.NEARLY_ZERO) {
             console.warn(`Light vector has practically no length. This will cause lighting problems.`);
@@ -27,6 +32,38 @@ class Environment {
         this.#bMax = Math.tan(bFieldOfViewAngle / 2) * referenceDistance / 200;
         this.#cMax = Math.tan(cFieldOfViewAngle / 2) * referenceDistance / 200;
         this.#parent = parent;
+
+        // Add the non-gradient SVG background
+        const backgroundSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        backgroundSvg.setAttribute("viewBox", "0 0 100 100");
+        backgroundSvg.setAttribute("preserveAspectRatio", "none");
+        backgroundSvg.style.display = "block";
+        backgroundSvg.style.position = "absolute";
+        backgroundSvg.style.left = "0";
+        backgroundSvg.style.top = "0";
+        backgroundSvg.style.width = "100%";
+        backgroundSvg.style.height = "100%";
+        backgroundSvg.innerHTML = `
+        <rect width="100%" height="100%" fill="rgb(205,30,30)">`;
+        this.#parent.appendChild(backgroundSvg);
+
+        // Add the SVG for the background now
+        this.#backgroundGradientSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        this.#backgroundGradientSvg.setAttribute("viewBox", "0 0 100 100");
+        this.#backgroundGradientSvg.setAttribute("preserveAspectRatio", "none");
+        this.#backgroundGradientSvg.style.display = "block";
+        this.#backgroundGradientSvg.style.position = "absolute";
+        this.#backgroundGradientSvg.style.left = "0";
+        this.#backgroundGradientSvg.style.top = "0";
+        this.#backgroundGradientSvg.style.width = "100%";
+        this.#backgroundGradientSvg.style.height = "100%";
+        this.#backgroundGradientSvg.innerHTML = `
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:rgb(255,175,150);stop-opacity:1" />
+            <stop offset="100%" style="stop-color:rgb(205,30,30);stop-opacity:1" />
+        </linearGradient>
+        <rect width="100%" height="100%" fill="url(#grad1)">`;
+        this.#parent.appendChild(this.#backgroundGradientSvg);
     }
 
     addPoint(coordinates) {
@@ -111,6 +148,10 @@ class Environment {
     draw(azimuthAngle, elevationAngle, observerCoordinates) {
         const drawStartTime = Date.now();
         if (drawStartTime - this.#lastDrawTime < Environment.minMillisBetweenDraws) return;
+
+        // Draw the sky
+        this.#backgroundGradientSvg.style.left = `${elevationAngle / this.#cFieldOfViewAngle * 200}%`;
+        console.log(this.#backgroundGradientSvg.style.left);
 
         for (let polygon of this.#polygons) {
             // Generate the svg d string

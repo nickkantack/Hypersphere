@@ -27,7 +27,7 @@ class PoseJoystickAdapter {
     constructor(environment) {
         this.#environment = environment;
 
-        environment.draw(0, 0, [0, 0, 0]);
+        environment.draw(0, 0, [0.001, 0.001, 0.001]);
 
         setInterval(() => {
 
