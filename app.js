@@ -30,7 +30,7 @@ environment.addPoint([10, 3, 3]);
 environment.addPoint([10, 0, 3]);
 
 // Add the sun
-environment.addPoint([20, -10, 3], 600, `
+environment.addPoint([200, -100, 30], 6000, `
 <radialGradient id="sunGradient">
       <stop offset="50%" stop-color="rgba(255,255,220,1)" />
       <stop offset="95%" stop-color="rgba(255,255,220,0)" />
