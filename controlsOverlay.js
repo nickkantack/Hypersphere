@@ -9,13 +9,13 @@ joystickToTouchMap = {};
 joystickToVectorMap = {};
 doesUpperJoystickHaveFirstTouch = false;
 
-initializeControls(mainDiv);
+initializeControls(controlsMainDiv);
 
 function initializeControls(parent) {
 
     // Create the top joystick
-    const upperJoystick = createJoystick("upperJoystick", 25, 50, parent);
-    const lowerJoystick = createJoystick("lowerJoystick", 75, 50, parent);
+    const upperJoystick = createJoystick("upperJoystick", 25, 30, parent);
+    const lowerJoystick = createJoystick("lowerJoystick", 75, 30, parent);
     // TODO create another joystick
 
 }
@@ -37,7 +37,7 @@ function createJoystick(id, x, y, parent) {
     outerRingSvg.setAttribute("viewBox", "0 0 100 100");
     outerRingSvg.innerHTML = `<circle cx="50" cy="50" 
         r="${50 * (1 - outerJoystickRingRadialThickness / outerJoystickOutsideRadius)}" 
-        stroke-width="${outerJoystickRingRadialThickness}" stroke="black" fill="none"/>`;
+        stroke-width="${outerJoystickRingRadialThickness}" stroke="#777" fill="none" opacity="0.8"/>`;
     parent.appendChild(outerRingSvg);
 
     const innerJoystick = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -50,7 +50,7 @@ function createJoystick(id, x, y, parent) {
     innerJoystick.style.height = `${2 * innerJoystickRadius}px`;
     innerJoystick.style.transform = `translate(-50%, -50%)`;
     innerJoystick.setAttribute("viewBox", "0 0 100 100");
-    innerJoystick.innerHTML = `<circle cx="50" cy="50" r="${innerJoystickRadius}" stroke="none" fill="#333"/>`;
+    innerJoystick.innerHTML = `<circle cx="50" cy="50" r="${innerJoystickRadius}" stroke="none" fill="#777" opacity="0.8"/>`;
     parent.appendChild(innerJoystick);
 
     function setAnchor() {

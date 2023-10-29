@@ -11,3 +11,11 @@ body {
     height: 100%;
     background: #DDD;
 }
+
+#controlsMainDiv {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}

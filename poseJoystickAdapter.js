@@ -16,8 +16,8 @@ class PoseJoystickAdapter {
     #playerXCoordinate = 0;
     #playerYCoordinate = 0;
 
-    #azimuthDamperFactor = 1 / 100;
-    #elevationDamperFactor = 1 / 200;
+    #azimuthDamperFactor = 1 / 50;
+    #elevationDamperFactor = 1 / 50;
 
     #sideToSideDamperFactor = 1 / 10;
     #forwardAndBackDamperFactor = 1 / 10;
@@ -35,16 +35,16 @@ class PoseJoystickAdapter {
             // should correspond to the first element of the alignedVector (the new azimuth angle) becoming more positive.
             // A positive elevation angle change is like looking down, so the "left" coordinate (index 0) going further left (negative change)
             // should correspond to the second element of the alignedVector (the new elevation angle) becoming more positive.
-            if (isJoystickHeldMap["upperJoystick"]) {
-                const vector = joystickToVectorMap["upperJoystick"];
+            if (isJoystickHeldMap["lowerJoystick"]) {
+                const vector = joystickToVectorMap["lowerJoystick"];
                 this.#playerAzimuthAngle -= vector[1] * this.#azimuthDamperFactor;
                 this.#playerElevationAngle -= vector[0] * this.#elevationDamperFactor;
                 // debugDiv.innerHTML = `${vector[0]}, ${vector[1]}`;
             }
-            if (isJoystickHeldMap["lowerJoystick"]) {
+            if (isJoystickHeldMap["upperJoystick"]) {
                 // The player's "right" vector (Unity speak) is the vector that should be added to the x and y portion of the player position,
                 // scaled by the negative "top" displacement of the vector (i.e. -vector[1]).
-                const vector = joystickToVectorMap["lowerJoystick"];
+                const vector = joystickToVectorMap["upperJoystick"];
                 let rightVector = [Math.sin(this.#playerAzimuthAngle), Math.cos(this.#playerAzimuthAngle)];
                 // There are cross terms here! Both elements of rightVector should influence the player's X and Y coordinates
                 // debugDiv.innerHTML = `${rightVector[0]},${rightVector[1]}`;
