@@ -66,7 +66,7 @@ class Environment {
         this.#parent.appendChild(this.#backgroundGradientSvg);
     }
 
-    addPoint(coordinates) {
+    addPoint(coordinates, size, customFillHtml, identifier) {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("viewBox", "0 0 100 100");
         svg.style.display = "block";
@@ -76,8 +76,8 @@ class Environment {
         svg.style.width = "10px";
         svg.style.height = "10px";
         svg.style.transform = "transform(-50%, -50%)";
-        svg.innerHTML = `<circle cx="50" cy="50" r="40" stroke="none" fill="#400"/>`;
-        this.#points.push({svg: svg, coordinates: coordinates});
+        svg.innerHTML = `${customFillHtml || ""}<circle cx="50" cy="50" r="40" stroke="none" fill="${customFillHtml ? identifier : "#400"}"/>`;
+        this.#points.push({svg: svg, coordinates: coordinates, size: size});
         this.#parent.appendChild(svg);
     }
 
@@ -193,8 +193,8 @@ class Environment {
 
             svg.style.display = projection.isVisible ? "block" : "none";
             if (!projection.isVisible) continue;
-            svg.style.width = `${10 * projection.sizeScaler}px`;
-            svg.style.height = `${10 * projection.sizeScaler}px`;
+            svg.style.width = `${(point.size ? point.size : 10) * projection.sizeScaler}px`;
+            svg.style.height = `${(point.size ? point.size : 10) * projection.sizeScaler}px`;
             svg.style.top = `${projection.topPercent}%`;
             svg.style.left = `${projection.leftPercent}%`;
         }

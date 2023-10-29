@@ -1,5 +1,5 @@
 
-let environment = new Environment(10, Math.PI * 2 / 3, Math.PI / 2, [1, 1, -2], mainDiv);
+let environment = new Environment(10, Math.PI * 2 / 3, Math.PI / 2, [-20, 10, -3], mainDiv);
 
 function terrainGenerator(x, y) {
     return -1 + 0.2 * Math.cos(2 * Math.PI / 10 * x) + 0.3 * Math.cos(2 * Math.PI / 16 * y);
@@ -28,5 +28,13 @@ environment.addPoint([10, 0, 0]);
 environment.addPoint([10, 3, 0]);
 environment.addPoint([10, 3, 3]);
 environment.addPoint([10, 0, 3]);
+
+// Add the sun
+environment.addPoint([20, -10, 3], 600, `
+<radialGradient id="sunGradient">
+      <stop offset="50%" stop-color="rgba(255,255,220,1)" />
+      <stop offset="95%" stop-color="rgba(255,255,220,0)" />
+    </radialGradient>
+`, `url('#sunGradient')`);
 
 let joystickAdapter = new PoseJoystickAdapter(environment);

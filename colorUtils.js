@@ -4,7 +4,7 @@ class ColorUtils {
     static adjustColorHashtagForLighting(colorHashtag, lightVectorNormalVectorDotProduct) {
         const halfRange = 0.3;
         const sensitivity = 10;
-        const expectedDot = 0.85;
+        const expectedDot = 0.15;
         let colorScaler = (1 - halfRange) + halfRange * (lightVectorNormalVectorDotProduct - expectedDot) * sensitivity;
         if (colorScaler > 1) colorScaler = 1;
         if (colorScaler < 1 - 2 * halfRange) colorScaler = 1 - 2 * halfRange;
