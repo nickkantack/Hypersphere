@@ -8,13 +8,21 @@ class Environment {
     #parent;
     #lastDrawTime;
     #lastDrawDuration;
+    #lightVector;
 
     static minMillisBetweenDraws = 10;
 
-    constructor(referenceDistance, bFieldOfViewAngle, cFieldOfViewAngle, parent) {
+    constructor(referenceDistance, bFieldOfViewAngle, cFieldOfViewAngle, lightVector, parent) {
         this.#referenceDistance = referenceDistance;
         this.#points = [];
         this.#polygons = [];
+        this.#lightVector = lightVector;
+        const lightVectorLength = VectorCalc.mag(lightVector);
+        if (lightVectorLength < VectorCalc.NEARLY_ZERO) {
+            console.warn(`Light vector has practically no length. This will cause lighting problems.`);
+        } else {
+            this.#lightVector = VectorCalc.scale(this.#lightVector, 1 / lightVectorLength);
+        }
         // Compute bMax and cMax
         this.#bMax = Math.tan(bFieldOfViewAngle / 2) * referenceDistance / 200;
         this.#cMax = Math.tan(cFieldOfViewAngle / 2) * referenceDistance / 200;
@@ -36,7 +44,7 @@ class Environment {
         this.#parent.appendChild(svg);
     }
 
-    addPolygon(arrayOfCoordinates) {
+    addPolygon(arrayOfCoordinates, principalColorHashtag) {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("viewBox", "0 0 100 100");
         svg.setAttribute("preserveAspectRatio", "none");
@@ -46,8 +54,29 @@ class Environment {
         svg.style.top = "0";
         svg.style.width = `100%`;
         svg.style.height = `100%`;
-        svg.innerHTML = `<path stroke="none" fill=#777 d=""/>`;
-        this.#polygons.push({svg: svg, arrayOfCoordinates: arrayOfCoordinates});
+        let normalVector = null;
+        if (arrayOfCoordinates.length > 2) {
+            const v1 = [arrayOfCoordinates[1][0] - arrayOfCoordinates[0][0], 
+                        arrayOfCoordinates[1][1] - arrayOfCoordinates[0][1],
+                        arrayOfCoordinates[1][2] - arrayOfCoordinates[0][2]];
+            const v2 = [arrayOfCoordinates[2][0] - arrayOfCoordinates[0][0], 
+                        arrayOfCoordinates[2][1] - arrayOfCoordinates[0][1],
+                        arrayOfCoordinates[2][2] - arrayOfCoordinates[0][2]];
+            normalVector = [v1[1] * v2[2] - v2[1] * v1[2],
+                            v1[2] * v2[0] - v2[2] * v1[0],
+                            v1[0] * v2[1] - v2[0] * v1[1]];
+            console.log(`${v1} cross ${v2} to obtain normal ${normalVector}`);
+            const normalVectorLength = Math.sqrt(normalVector[0] * normalVector[0] + normalVector[1] * normalVector[1] + normalVector[2] * normalVector[2]);
+            if (normalVectorLength < 0.00001) {
+                console.warn("Got a polygon with a normal vector that's practically zero. That's probably gonna be an issue.");
+            } else {
+                normalVector = [normalVector[0] / normalVectorLength, normalVector[1] / normalVectorLength, normalVector[2] / normalVectorLength];
+            }
+        }
+        const lightingDotProduct = VectorCalc.dotProduct(normalVector, this.#lightVector);
+        console.log(`Normal ${normalVector} dotted with light vector ${this.#lightVector} to obtain ${lightingDotProduct}`);
+        svg.innerHTML = `<path stroke="none" fill=${ColorUtils.adjustColorHashtagForLighting(principalColorHashtag, lightingDotProduct)} d=""/>`;
+        this.#polygons.push({svg: svg, arrayOfCoordinates: arrayOfCoordinates, normalVector: normalVector});
         this.#parent.appendChild(svg);
     }
 
