@@ -14,6 +14,9 @@
             <div id="debugDiv"></div>
         </div>
         <script src="./controlsOverlay.js" defer></script>
+        <!-- It is important that the poseJoystickAdapter is defined after controlsOverlay, until the latter is a class -->
+        <script src="./poseJoystickAdapter.js" defer></script>
+        <script src="./environment.js" defer></script>
         <script src="./app.js" defer></script>
         <script>
         let isLocal = 0;

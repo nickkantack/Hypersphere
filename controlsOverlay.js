@@ -6,6 +6,7 @@ const innerJoystickRadius = 50;
 isJoystickHeldMap = {};
 anchorMap = {};
 joystickToTouchMap = {};
+joystickIdToCallbackMap = {};
 doesUpperJoystickHaveFirstTouch = false;
 
 initializeControls(mainDiv);
@@ -17,6 +18,11 @@ function initializeControls(parent) {
     const lowerJoystick = createJoystick("lowerJoystick", 75, 50, parent);
     // TODO create another joystick
 
+}
+
+function registerJoystickCallback(id, callback) {
+    if (joystickIdToCallbackMap[id]) console.warn(`Warning: joystick with id ${id} already has a callback. Overwriting...`);
+    joystickIdToCallMap[id] = callback;
 }
 
 function createJoystick(id, x, y, parent) {
@@ -90,13 +96,13 @@ function createJoystick(id, x, y, parent) {
         const anchor = anchorMap[id];
         let vector = [touchEvent.pageX - anchor[0], touchEvent.pageY - anchor[1]];
         let vectorSquareLength = vector[0] * vector[0] + vector[1] * vector[1];
+        let vectorLength = Math.sqrt(vectorSquareLength);
         if (vectorSquareLength > outerJoystickOutsideRadiusSquared) {
-            vector[0] *= outerJoystickOutsideRadius / Math.sqrt(vectorSquareLength);
-            vector[1] *= outerJoystickOutsideRadius / Math.sqrt(vectorSquareLength);
+            vector[0] *= outerJoystickOutsideRadius / vectorLength;
+            vector[1] *= outerJoystickOutsideRadius / vectorLength;
         }
         innerJoystick.style.transform = `translate(${-innerJoystickRadius + vector[0]}px, ${-innerJoystickRadius + vector[1]}px)`;
-        debugDiv.innerHTML = vector;
-        // TODO call any registered callbacks about new control values from the joystick
+        if (joystickIdToCallbackMap[id]) joystickIdToCallbackMap[id]([vector[0] / vectorLength, vector[1] / vectorLength]);
     }
 
 }
