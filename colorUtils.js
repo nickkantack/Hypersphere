@@ -3,9 +3,12 @@ class ColorUtils {
 
     static adjustColorHashtagForLighting(colorHashtag, lightVectorNormalVectorDotProduct) {
         const halfRange = 0.3;
-        const colorScaler = (1 - halfRange) + halfRange * lightVectorNormalVectorDotProduct;
+        const sensitivity = 10;
+        const expectedDot = 0.85;
+        let colorScaler = (1 - halfRange) + halfRange * (lightVectorNormalVectorDotProduct - expectedDot) * sensitivity;
+        if (colorScaler > 1) colorScaler = 1;
+        if (colorScaler < 1 - 2 * halfRange) colorScaler = 1 - 2 * halfRange;
         const result = ColorUtils.arrayToColorHashtag(VectorCalc.scale(ColorUtils.colorHashtagToArray(colorHashtag), colorScaler));
-        console.log(`${lightVectorNormalVectorDotProduct},${colorScaler}, ${result}`);
         return result;
     }
 
@@ -15,7 +18,7 @@ class ColorUtils {
             return;
         }
         if (colorHashtag.length === 4) {
-            return [ColorUtils.hexNumberToInt(colorHashtag[1]), ColorUtils.hexNumberToInt(colorHashtag[2]), ColorUtils.hexNumberToInt(colorHashtag[3])]
+            return [16 * ColorUtils.hexNumberToInt(colorHashtag[1]), 16 * ColorUtils.hexNumberToInt(colorHashtag[2]), 16 * ColorUtils.hexNumberToInt(colorHashtag[3])]
         }
         if (colorHashtag.length === 7) {
             return [
@@ -28,7 +31,6 @@ class ColorUtils {
     }
 
     static arrayToColorHashtag(array) {
-        console.log(array);
         if (array.length !== 3) {
             console.error(`Can't convert array of length ${array.length} to color hashtag since it's not of length 3. Array was ${array}`);
             return;
@@ -37,6 +39,15 @@ class ColorUtils {
     }
 
     static numberToHex(number) {
+        if (isNaN(number) || number < 0 || number > 255) {
+            console.error(`Can't convert number ${number} to hex because it's not between 0 and 255 inclusively`);
+            return;
+        }
+        number = parseInt(number);
+        return `${ColorUtils.digitToHex(parseInt(number / 16))}${ColorUtils.digitToHex(number % 16)}`;
+    }
+
+    static digitToHex(number) {
         if (isNaN(number) || number < 0 || number > 15) {
             console.error(`Can't convert number ${number} to hex because it's not between 0 and 15 inclusively`);
             return;

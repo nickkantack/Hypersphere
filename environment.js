@@ -65,7 +65,6 @@ class Environment {
             normalVector = [v1[1] * v2[2] - v2[1] * v1[2],
                             v1[2] * v2[0] - v2[2] * v1[0],
                             v1[0] * v2[1] - v2[0] * v1[1]];
-            console.log(`${v1} cross ${v2} to obtain normal ${normalVector}`);
             const normalVectorLength = Math.sqrt(normalVector[0] * normalVector[0] + normalVector[1] * normalVector[1] + normalVector[2] * normalVector[2]);
             if (normalVectorLength < 0.00001) {
                 console.warn("Got a polygon with a normal vector that's practically zero. That's probably gonna be an issue.");
@@ -74,7 +73,6 @@ class Environment {
             }
         }
         const lightingDotProduct = VectorCalc.dotProduct(normalVector, this.#lightVector);
-        console.log(`Normal ${normalVector} dotted with light vector ${this.#lightVector} to obtain ${lightingDotProduct}`);
         svg.innerHTML = `<path stroke="none" fill=${ColorUtils.adjustColorHashtagForLighting(principalColorHashtag, lightingDotProduct)} d=""/>`;
         this.#polygons.push({svg: svg, arrayOfCoordinates: arrayOfCoordinates, normalVector: normalVector});
         this.#parent.appendChild(svg);

@@ -1,18 +1,18 @@
 
-let environment = new Environment(10, Math.PI * 2 / 3, Math.PI / 2, [1, 1, -10], mainDiv);
+let environment = new Environment(10, Math.PI * 2 / 3, Math.PI / 2, [1, 1, -2], mainDiv);
 
 function terrainGenerator(x, y) {
-    return Math.cos(2 * Math.PI / 5 * x) + Math.cos(2 * Math.PI / 8 * y);
+    return -1 + 0.2 * Math.cos(2 * Math.PI / 10 * x) + 0.3 * Math.cos(2 * Math.PI / 16 * y);
 }
 
 for (let i = -15; i < 15; i++) {
     for (let j = -15; j < 15; j++) {
-        environment.addPoint([2 * i, 2 * j, -1]);
+        // environment.addPoint([2 * i, 2 * j, terrainGenerator(2 * i, 2 * j)]);
         environment.addPolygon([
-            [2 * i, 2 * j, -1],
-            [2 * (i + 1), 2 * j, -1],
-            [2 * (i + 1), 2 * (j + 1), -1],
-            [2 * i, 2 * (j + 1), -1],
+            [2 * i, 2 * j, terrainGenerator(2 * i, 2 * j)],
+            [2 * i, 2 * (j + 1), terrainGenerator(2 * i, 2 * (j + 1))],
+            [2 * (i + 1), 2 * (j + 1), terrainGenerator(2 * (i + 1), 2 * (j + 1))],
+            [2 * (i + 1), 2 * j, terrainGenerator(2 * (i + 1), 2 * j)],
         ], "#FAA");
     }
 }
