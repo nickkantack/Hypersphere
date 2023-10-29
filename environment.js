@@ -8,7 +8,7 @@ class Environment {
     #lastDrawTime;
     #lastDrawDuration;
 
-    static minMillisBetweenDraws = 25;
+    static minMillisBetweenDraws = 10;
 
     constructor(referenceDistance, bFieldOfViewAngle, cFieldOfViewAngle, parent) {
         this.#referenceDistance = referenceDistance;

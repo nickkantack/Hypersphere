@@ -6,7 +6,7 @@ const innerJoystickRadius = 50;
 isJoystickHeldMap = {};
 anchorMap = {};
 joystickToTouchMap = {};
-joystickIdToCallbackMap = {};
+joystickToVectorMap = {};
 doesUpperJoystickHaveFirstTouch = false;
 
 initializeControls(mainDiv);
@@ -102,7 +102,7 @@ function createJoystick(id, x, y, parent) {
             vector[1] *= outerJoystickOutsideRadius / vectorLength;
         }
         innerJoystick.style.transform = `translate(${-innerJoystickRadius + vector[0]}px, ${-innerJoystickRadius + vector[1]}px)`;
-        if (joystickIdToCallbackMap[id]) joystickIdToCallbackMap[id]([vector[0] / vectorLength, vector[1] / vectorLength]);
+        joystickToVectorMap[id] = [vector[0] / outerJoystickOutsideRadius, vector[1] / outerJoystickOutsideRadius];
     }
 
 }
