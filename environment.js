@@ -80,12 +80,12 @@ class Environment {
 
     #threePointToTopAndLeftPercents(point, azimuthAngle, elevationAngle, observerCoordinates, doPolyPin) {
         let translatedPoint = [point[0] - observerCoordinates[0], point[1] - observerCoordinates[1], point[2] - observerCoordinates[2]];
-        let intermedRotatedPoint = [translatedPoint[0] * Math.cos(azimuthAngle) - translatedPoint[1] * Math.sin(azimuthAngle),
-                                    translatedPoint[1] * Math.cos(azimuthAngle) + translatedPoint[0] * Math.sin(azimuthAngle), 
+        let intermedRotatedPoint = [translatedPoint[0] * FastMath.fastCosine(azimuthAngle) - translatedPoint[1] * FastMath.fastSine(azimuthAngle),
+                                    translatedPoint[1] * FastMath.fastCosine(azimuthAngle) + translatedPoint[0] * FastMath.fastSine(azimuthAngle), 
                                     translatedPoint[2]];
-        let rotatedPoint = [intermedRotatedPoint[0] * Math.cos(elevationAngle) - intermedRotatedPoint[2] * Math.sin(elevationAngle),
+        let rotatedPoint = [intermedRotatedPoint[0] * FastMath.fastCosine(elevationAngle) - intermedRotatedPoint[2] * FastMath.fastSine(elevationAngle),
                             intermedRotatedPoint[1],
-                            intermedRotatedPoint[2] * Math.cos(elevationAngle) + intermedRotatedPoint[0] * Math.sin(elevationAngle)];
+                            intermedRotatedPoint[2] * FastMath.fastCosine(elevationAngle) + intermedRotatedPoint[0] * FastMath.fastSine(elevationAngle)];
         // Now rotatedPoint can be thought of as in the form [a, b, c], where a is depth, b is long dim of the screen, and c is the
         // short dim of the screen
         let isVisible = rotatedPoint[0] > 0;
@@ -102,7 +102,8 @@ class Environment {
             isVisible: isVisible,
             leftPercent: 50 + screenY,
             topPercent: 50 + screenX,
-            sizeScaler: sizeScaler
+            sizeScaler: sizeScaler,
+            rotatedPoint: rotatedPoint
         }
 
     }
@@ -120,9 +121,19 @@ class Environment {
 
             let projection = this.#threePointToTopAndLeftPercents(polygon.arrayOfCoordinates[0], azimuthAngle, elevationAngle, observerCoordinates, true);
             let isAnyPointVisible = projection.isVisible;
+            // Do the small polygon approximation (if any point is behind the player, the whole polygon is invisible)
+            if (projection.rotatedPoint[0] < 0) {
+                polygon.svg.style.display = "none";
+                continue;
+            }
             let pathString = `M${projection.leftPercent} ${projection.topPercent}`;
             for (let i = 1; i < polygon.arrayOfCoordinates.length; i++) {
                 projection = this.#threePointToTopAndLeftPercents(polygon.arrayOfCoordinates[i], azimuthAngle, elevationAngle, observerCoordinates, true);
+                // Do the small polygon approximation (if any point is behind the player, the whole polygon is invisible)
+                if (projection.rotatedPoint[0] < 0) {
+                    polygon.svg.style.display = "none";
+                    break;
+                }
                 isAnyPointVisible |= projection.isVisible;
                 pathString += `L${projection.leftPercent} ${projection.topPercent}`;
             }
