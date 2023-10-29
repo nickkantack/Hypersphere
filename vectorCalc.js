@@ -33,4 +33,12 @@ class VectorCalc {
         return VectorCalc.magSq([p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]]);
     }
 
+    static square(array) {
+        return [array[0] * array[0], array[1] * array[1], array[2] * array[2]];
+    }
+
+    static cube(array) {
+        return [array[0] * array[0] * array[0], array[1] * array[1] * array[1], array[2] * array[2] * array[2]];
+    }
+
 }
