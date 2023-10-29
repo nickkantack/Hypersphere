@@ -2,11 +2,11 @@
 let environment = new Environment(10, Math.PI * 2 / 3, Math.PI / 2, [-20, 10, -3], mainDiv);
 
 function terrainGenerator(x, y) {
-    return -1 + 0.2 * Math.cos(2 * Math.PI / 10 * x) + 0.3 * Math.cos(2 * Math.PI / 16 * y);
+    return -1 + 0.3 * Math.cos(2 * Math.PI / 24 * (y + x)) + 0.2 * Math.cos(2 * Math.PI / 10 * x) + 0.3 * Math.cos(2 * Math.PI / 16 * y);
 }
 
-for (let i = -15; i < 15; i++) {
-    for (let j = -15; j < 15; j++) {
+for (let i = -25; i < 25; i++) {
+    for (let j = -25; j < 25; j++) {
         // environment.addPoint([2 * i, 2 * j, terrainGenerator(2 * i, 2 * j)]);
         environment.addPolygon([
             [2 * i, 2 * j, terrainGenerator(2 * i, 2 * j)],

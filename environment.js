@@ -151,7 +151,6 @@ class Environment {
 
         // Draw the sky
         this.#backgroundGradientSvg.style.left = `${elevationAngle / this.#cFieldOfViewAngle * 200}%`;
-        console.log(this.#backgroundGradientSvg.style.left);
 
         for (let polygon of this.#polygons) {
             // Generate the svg d string
@@ -176,11 +175,24 @@ class Environment {
                     break;
                 }
                 isAnyPointVisible |= projection.isVisible;
+                if (projection.isVisible) {
+                    polygon.svg.setAttribute("lastACoordinate", VectorCalc.squareDistanceBetween(projection.rotatedPoint, observerCoordinates));
+                }
                 pathString += `L${projection.leftPercent} ${projection.topPercent}`;
             }
             if (isAnyPointVisible) {
                 polygon.svg.style.display = "block";
+                //polygon.svg.querySelector("path").setAttribute("opacity", (10 / projection.rotatedPoint[0] > 1 ? 1 : 10 / projection.rotatedPoint[0]));
                 polygon.svg.querySelector("path").setAttribute("d", `${pathString}Z`);
+                // Do one swap with a neighbor
+                const previousSibling = polygon.svg.previousSibling;
+                if (previousSibling.tagName === "svg") {
+                    if (previousSibling.getAttribute("lastACoordinate") && polygon.svg.getAttribute("lastACoordinate")) {
+                        if (previousSibling.getAttribute("lastACoordinate") < polygon.svg.getAttribute("lastACoordinate")) {
+                            polygon.svg.parentNode.insertBefore(polygon.svg, previousSibling);
+                        }
+                    }
+                }
             } else {
                 polygon.svg.style.display = "none";
             }
