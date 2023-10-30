@@ -16,11 +16,11 @@ class PoseJoystickAdapter {
     #playerXCoordinate = 0;
     #playerYCoordinate = 0;
 
-    #azimuthDamperFactor = 1 / 50;
-    #elevationDamperFactor = 1 / 50;
+    #azimuthDamperFactor = 1 / 30;
+    #elevationDamperFactor = 1 / 30;
 
-    #sideToSideDamperFactor = 1 / 10;
-    #forwardAndBackDamperFactor = 1 / 10;
+    #sideToSideDamperFactor = 1 / 5;
+    #forwardAndBackDamperFactor = 1 / 5;
 
     #delayBetweenEnvironmentDrawsMillis = 15;
 
@@ -28,6 +28,7 @@ class PoseJoystickAdapter {
         this.#environment = environment;
 
         environment.draw(0, 0, [0.001, 0.001, 0.001]);
+        environment.sortSvgs();
 
         setInterval(() => {
 

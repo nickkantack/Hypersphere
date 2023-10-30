@@ -9,6 +9,10 @@ class VectorCalc {
 
     static NEARLY_ZERO = 0.000001;
 
+    static add(p1, p2) {
+        return [p1[0] + p2[0], p1[1] + p2[1], p1[2] + p2[2]];
+    }
+
     static mag(array) {
         return Math.sqrt(array[0] * array[0] + array[1] * array[1] + array[2] * array[2]);
     }

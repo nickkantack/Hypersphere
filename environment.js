@@ -152,6 +152,20 @@ class Environment {
         // Draw the sky
         this.#backgroundGradientSvg.style.left = `${elevationAngle / this.#cFieldOfViewAngle * 200}%`;
 
+        // Draw the sun and any other point before the terrain
+        for (let point of this.#points) {
+            let svg = point.svg;
+
+            const projection = this.#threePointToTopAndLeftPercents(point.coordinates, azimuthAngle, elevationAngle, observerCoordinates);
+
+            svg.style.display = projection.isVisible ? "block" : "none";
+            if (!projection.isVisible) continue;
+            svg.style.width = `${(point.size ? point.size : 10) * projection.sizeScaler}px`;
+            svg.style.height = `${(point.size ? point.size : 10) * projection.sizeScaler}px`;
+            svg.style.top = `${projection.topPercent}%`;
+            svg.style.left = `${projection.leftPercent}%`;
+        }
+
         for (let polygon of this.#polygons) {
             // Generate the svg d string
             if (polygon.arrayOfCoordinates.length < 3) {
@@ -160,6 +174,7 @@ class Environment {
             }
 
             let projection = this.#threePointToTopAndLeftPercents(polygon.arrayOfCoordinates[0], azimuthAngle, elevationAngle, observerCoordinates, true);
+            polygon.svg.setAttribute("lastACoordinate", VectorCalc.squareDistanceBetween(projection.rotatedPoint, observerCoordinates));
             let isAnyPointVisible = projection.isVisible;
             // Do the small polygon approximation (if any point is behind the player, the whole polygon is invisible)
             if (projection.rotatedPoint[0] < 0) {
@@ -175,9 +190,6 @@ class Environment {
                     break;
                 }
                 isAnyPointVisible |= projection.isVisible;
-                if (projection.isVisible) {
-                    polygon.svg.setAttribute("lastACoordinate", VectorCalc.squareDistanceBetween(projection.rotatedPoint, observerCoordinates));
-                }
                 pathString += `L${projection.leftPercent} ${projection.topPercent}`;
             }
             if (isAnyPointVisible) {
@@ -200,21 +212,18 @@ class Environment {
             }
         }
 
-        for (let point of this.#points) {
-            let svg = point.svg;
-
-            const projection = this.#threePointToTopAndLeftPercents(point.coordinates, azimuthAngle, elevationAngle, observerCoordinates);
-
-            svg.style.display = projection.isVisible ? "block" : "none";
-            if (!projection.isVisible) continue;
-            svg.style.width = `${(point.size ? point.size : 10) * projection.sizeScaler}px`;
-            svg.style.height = `${(point.size ? point.size : 10) * projection.sizeScaler}px`;
-            svg.style.top = `${projection.topPercent}%`;
-            svg.style.left = `${projection.leftPercent}%`;
-        }
-
         this.#lastDrawTime = Date.now();
         this.#lastDrawDuration = this.#lastDrawTime - drawStartTime;
+    }
+
+    sortSvgs() {
+        let svgs = Array.from(this.#parent.querySelectorAll("svg"));
+        svgs.sort((a, b) => {
+            const result = (a.getAttribute("lastACoordinate") || 1000) - (b.getAttribute("lastACoordinate") || 1000);
+            console.log(result);
+            return result;
+        });
+        this.#parent.append([...svgs]);
     }
 
     getLastDrawDuration() {
